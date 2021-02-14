@@ -23,15 +23,15 @@ def game(screen):
     main_board = pygame.Surface((200, 200))
 
     # display whos turn and if won lost or draw
-    left_title_obj = TextSurface("Human to move", YELLOW)
+    left_title_obj = TextSurface("Human to move", AQUA)
     # display stats below analysis board
-    right_title_obj = TextSurface("", YELLOW)
+    right_title_obj = TextSurface("", PINK)
 
     # buttons for the options menu
     button_group = pygame.sprite.Group()
-    reset_button = Button("Reset", RED)
-    player_move = Button("Human Moves", GREEN)
-    ai_move = Button("Ai Moves", YELLOW)
+    reset_button = Button("Reset", (171, 0, 0))
+    player_move = Button("Human Moves", (171, 0, 0))
+    ai_move = Button("Ai Moves", (171, 0, 0))
 
     button_group.add(reset_button)
     button_group.add(player_move)
@@ -43,10 +43,10 @@ def game(screen):
     analysis_board = pygame.Surface((1, 1))
 
     # methods from game_logic.py
-    tile_group = generate_board(main_board)
+    tile_group = generate_board(main_board, "main")
     fill_board(tile_group)
 
-    analysis_tile_group = generate_board(analysis_board)
+    analysis_tile_group = generate_board(analysis_board, "analysis")
     fill_board(analysis_tile_group)
 
     # mouse pointer is relative to the window
@@ -85,12 +85,12 @@ def game(screen):
 
         # //-- reset the surfaces --//
         screen.fill(WHITE)
-        window.fill(PINK)
-        left_side.fill(AQUA)
-        main_board.fill(GREEN)
+        window.fill(DARK_BLUE)
+        left_side.fill(BLUE)
+        main_board.fill(BLACK)
         right_side.fill(RED)
-        options_selector.fill(WHITE)
-        analysis_board.fill(GREEN)
+        options_selector.fill(PINK)
+        analysis_board.fill(BLACK)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

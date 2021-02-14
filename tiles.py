@@ -18,13 +18,17 @@ class MousePointer(pygame.sprite.Sprite):
 
 
 class Tile(pygame.sprite.Sprite):
-    def __init__(self, pos, window, key):
+    def __init__(self, pos, window, key, side):
         super().__init__()
 
         self.pos = pos
         self.key = key
         self.image = pygame.Surface((window.get_width() // 3, window.get_height() // 3))
-        self.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        if side == "main":
+            self.color = (random.randint(150, 250), random.randint(70, 120), random.randint(0, 50))
+        if side == "analysis":
+            self.color = (random.randint(0, 50), random.randint(50, 160), random.randint(50, 130))
+
         self.image.fill(self.color)
 
         self.state = "."
@@ -75,7 +79,7 @@ class TextSurface(pygame.sprite.Sprite):
         try:
             self.font = pygame.freetype.SysFont("bell", self.image.get_height() * 0.6)
             self.image.fill(self.color)
-            text, text_rect = self.font.render(self.text, fgcolor=(0, 0, 255))
+            text, text_rect = self.font.render(self.text, fgcolor=(255, 255, 255))
             self.image.blit(text, text.get_rect(center=self.image.get_rect().center))
         except:
             print("oh no, you squished the screen too much? :/")

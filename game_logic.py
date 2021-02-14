@@ -9,13 +9,13 @@ board = [".", ".", ".",
          ".", ".", "."]
 
 
-def generate_board(window):
+def generate_board(window, side):
     # -- generate tiles --
     tile_group = pygame.sprite.Group()
     key = 0
     for i in range(0, 3):
         for j in range(0, 3):
-            tile_group.add(Tile([j, i], window, key))
+            tile_group.add(Tile([j, i], window, key, side))
             key += 1
     return tile_group
 
