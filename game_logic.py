@@ -4,9 +4,14 @@ import time
 
 player, ai = "O", "X"
 
+
 board = [".", ".", ".",
          ".", ".", ".",
          ".", ".", "."]
+
+board = [".", ".", "O",
+         "/", "O", "/",
+         ".", "X", "/"]
 
 
 def generate_board(window, side):
@@ -55,7 +60,7 @@ def check_if_won(board):
         # if a blank space is found draw = False
         draw = True
         for tile in board:
-            if not(tile == "X" or tile == "O"):
+            if tile == ".":
                 draw = False
     else:
         draw = False
@@ -77,10 +82,13 @@ def static_evaluation(board, depth, number_of_boards_considered, list_of_boards_
         return None
 
 
-def minimax(board, depth, isMax, max_id, min_id, number_of_boards_considered, list_of_boards_considered):
+def minimax(board, depth, isMax, max_id, min_id, number_of_boards_considered, list_of_boards_considered, alpha, beta):
+
     # if no moves are left to check
     if static_evaluation(board, depth, number_of_boards_considered, list_of_boards_considered) != None:
         return static_evaluation(board, depth, number_of_boards_considered, list_of_boards_considered)
+
+    list_of_boards_considered.append(board)
 
     # if we are simulating what a player maximising the evaluation would do
     if isMax:
@@ -88,17 +96,21 @@ def minimax(board, depth, isMax, max_id, min_id, number_of_boards_considered, li
         currentMaxEval = -9999
         # check all legal moves
         for i in range(len(board)):
-            if not(board[i] == "X" or board[i] == "O"):
+            if board[i] == ".":
                 # analyse moves on a test board
                 analysis_board = board.copy()
                 analysis_board[i] = max_id
                 number_of_boards_considered += 1
                 list_of_boards_considered.append(analysis_board)
 
-                evaluation, number_of_boards_considered, list_of_boards_considered = minimax(analysis_board, depth+1, False, max_id, min_id, number_of_boards_considered, list_of_boards_considered)
+                evaluation, number_of_boards_considered, list_of_boards_considered = minimax(analysis_board, depth+1, False, max_id, min_id, number_of_boards_considered, list_of_boards_considered, alpha, beta)
 
-                if evaluation > currentMaxEval:
-                    currentMaxEval = evaluation
+
+                currentMaxEval = max(evaluation, currentMaxEval)
+
+                alpha = max(alpha, evaluation)
+                if beta <= alpha:
+                    break
 
         return currentMaxEval, number_of_boards_considered, list_of_boards_considered
 
@@ -108,17 +120,22 @@ def minimax(board, depth, isMax, max_id, min_id, number_of_boards_considered, li
         currentMinEval = 9999
         # check all legal moves
         for i in range(len(board)):
-            if not(board[i] == "X" or board[i] == "O"):
+            if board[i] == ".":
                 # analyse moves on a test board
                 analysis_board = board.copy()
                 analysis_board[i] = min_id
                 number_of_boards_considered += 1
                 list_of_boards_considered.append(analysis_board)
 
-                evaluation, number_of_boards_considered, list_of_boards_considered = minimax(analysis_board, depth+1, True, max_id, min_id, number_of_boards_considered, list_of_boards_considered)
+                evaluation, number_of_boards_considered, list_of_boards_considered = minimax(analysis_board, depth+1, True, max_id, min_id, number_of_boards_considered, list_of_boards_considered, alpha, beta)
 
-                if evaluation < currentMinEval:
-                    currentMinEval = evaluation
+
+                currentMinEval = min(evaluation, currentMinEval)
+
+
+                beta = min(beta, evaluation)
+                if beta <= alpha:
+                    break
 
         return currentMinEval, number_of_boards_considered, list_of_boards_considered
 
@@ -129,21 +146,25 @@ def find_computer_move(board, ai, player, number_of_boards_considered, list_of_b
 
     # for every empty move
     for i in range(len(board)):
-        if not(board[i] == "X" or board[i] == "O"):
+        if board[i] == ".":
 
             # make a test move on an analysis board
             analysis_board = board.copy()
             analysis_board[i] = ai
-            number_of_boards_considered +=1
+            number_of_boards_considered += 1
             list_of_boards_considered.append(analysis_board)
-            
-            # see if its good
-            evaluation, number_of_boards_considered, list_of_boards_considered = minimax(analysis_board, 0, True, player, ai, number_of_boards_considered, list_of_boards_considered)
+
+            alpha = -999999
+            beta = 9999999
+
+            # see if its good, check how the human (maximising player) may respond
+            evaluation, number_of_boards_considered, list_of_boards_considered = minimax(analysis_board, 0, True, player, ai, number_of_boards_considered, list_of_boards_considered, alpha, beta)
+   ######         print(analysis_board, evaluation)
 
             if evaluation < currentEval:
                 bestMove = i
                 currentEval = evaluation
-                # print(bestMove)
+
     return bestMove, number_of_boards_considered, list_of_boards_considered
 
 

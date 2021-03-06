@@ -3,38 +3,46 @@ import random
 # text based implementation
 # not used by other files
 
-board = ["0", "1", "2",
-         "3", "4", "5",
-         "6", "7", "8"]
+board = ["X", ".", "2",
+         "O", "O", "5",
+         "/", "/", "X"]
 
 
 # player will maximise,
 # ai will minimise
 player, ai = "O", "X"
 
-
 def print_board(board):
-    for i in range(9):
-        print(board[i], end="   ")
-        if (i+1) % 3 == 0:
-            print("\n")
+    print("   |   |   ")
+    print(" " + board[0] + " | " + board[1] + " | " + board[2] + "  ")
+    print("   |   |   ")
+    print("---|---|---")
+    print("   |   |   ")
+    print(" " + board[3] + " | " + board[4] + " | " + board[5] + "  ")
+    print("   |   |   ")
+    print("---|---|---")
+    print("   |   |   ")
+    print(" " + board[6] + " | " + board[7] + " | " + board[8] + "  ")
+    print("   |   |   ")
+ 
 
 
-def static_evaluation(board, depth, boards_considered, list_of_boards_considered):
+
+def static_evaluation(board, depth, boards_considered, list_of_boards_considered, alpha, beta):
     o_won, x_won, draw = check_if_won(board)
     if draw:
-        return 0, boards_considered, list_of_boards_considered
+        return 0, boards_considered, list_of_boards_considered, alpha, beta
     if o_won:
-        return (20 - depth), boards_considered, list_of_boards_considered
+        return (20 - depth), boards_considered, list_of_boards_considered, alpha, beta
     if x_won:
-        return (-20 + depth), boards_considered, list_of_boards_considered
+        return (-20 + depth), boards_considered, list_of_boards_considered, alpha, beta
     else:
         return None
 
 
-def minimax(board, depth, isMax, max_id, min_id, boards_considered, list_of_boards_considered):
-    if static_evaluation(board, depth, boards_considered, list_of_boards_considered) != None:
-        return static_evaluation(board, depth, boards_considered, list_of_boards_considered)
+def minimax(board, depth, isMax, max_id, min_id, boards_considered, list_of_boards_considered, alpha, beta):
+    if static_evaluation(board, depth, boards_considered, list_of_boards_considered, alpha, beta) != None:
+        return static_evaluation(board, depth, boards_considered, list_of_boards_considered, alpha, beta)
 
     if isMax:
         # set a worst case
@@ -46,12 +54,15 @@ def minimax(board, depth, isMax, max_id, min_id, boards_considered, list_of_boar
                 boards_considered += 1
                 list_of_boards_considered.append(analysis_board)
                 
-                evaluation, boards_considered, list_of_boards_considered = minimax(analysis_board, depth+1, False, max_id, min_id, boards_considered, list_of_boards_considered)
-
+                evaluation, boards_considered, list_of_boards_considered, alpha, beta = minimax(analysis_board, depth+1, False, max_id, min_id, boards_considered, list_of_boards_considered, alpha, beta)
+                
                 if evaluation > currentMaxEval:
                     currentMaxEval = evaluation
-            
-        return currentMaxEval, boards_considered, list_of_boards_considered
+                alpha = max(alpha, evaluation)
+                if beta <= alpha:
+                    break
+                
+        return currentMaxEval, boards_considered, list_of_boards_considered, alpha, beta
 
     if not isMax:
         # set a worst case
@@ -63,15 +74,18 @@ def minimax(board, depth, isMax, max_id, min_id, boards_considered, list_of_boar
                 boards_considered += 1
                 list_of_boards_considered.append(analysis_board)
                 
-                evaluation, boards_considered, list_of_boards_considered = minimax(analysis_board, depth+1, True, max_id, min_id, boards_considered, list_of_boards_considered)
+                evaluation, boards_considered, list_of_boards_considered, alpha, beta = minimax(analysis_board, depth+1, True, max_id, min_id, boards_considered, list_of_boards_considered, alpha, beta)
 
                 if evaluation < currentMinEval:
                     currentMinEval = evaluation
+                beta = min(beta, evaluation)
+                if beta <= alpha:
+                    break
 
-        return currentMinEval, boards_considered, list_of_boards_considered
+        return currentMinEval, boards_considered, list_of_boards_considered, alpha, beta
 
 
-def find_computer_move(board, ai, player, boards_considered, list_of_boards_considered):
+def find_computer_move(board, ai, player, boards_considered, list_of_boards_considered, alpha, beta):
     currentEval = 9999
 
     for i in range(len(board)):
@@ -83,7 +97,7 @@ def find_computer_move(board, ai, player, boards_considered, list_of_boards_cons
             boards_considered +=1
             list_of_boards_considered.append(analysis_board)
             # see if its good
-            evaluation, boards_considered, list_of_boards_considered = minimax(analysis_board, 0, True, player, ai, boards_considered, list_of_boards_considered)
+            evaluation, boards_considered, list_of_boards_considered, alpha, beta = minimax(analysis_board, 0, False, player, ai, boards_considered, list_of_boards_considered, alpha, beta)
 
             if evaluation < currentEval:
                 bestMove = i
@@ -160,7 +174,7 @@ def game():
         
         # find how many board
         list_of_boards_considered = []
-        computer_move, boards_considered, list_of_boards_considered = find_computer_move(board, ai, player, boards_considered, list_of_boards_considered)
+        computer_move, boards_considered, list_of_boards_considered = find_computer_move(board, ai, player, boards_considered, list_of_boards_considered, -99999, 99999)
         print(boards_considered, list_of_boards_considered)
         
         board[computer_move] = ai

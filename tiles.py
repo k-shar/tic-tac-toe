@@ -25,12 +25,12 @@ class Tile(pygame.sprite.Sprite):
         self.key = key
         self.image = pygame.Surface((window.get_width() // 3, window.get_height() // 3))
         if side == "main":
-            self.color = (random.randint(150, 250), random.randint(70, 120), random.randint(0, 50))
+            self.color = (random.randint(240, 250), random.randint(110, 120), random.randint(40, 50))
         if side == "analysis":
-            self.color = (random.randint(0, 50), random.randint(50, 160), random.randint(50, 130))
+            self.color = (random.randint(40, 50), random.randint(150, 160), random.randint(120, 130))
 
         self.image.fill(self.color)
-
+        self.rect = self.image.get_rect()
         self.state = "."
 
     def update(self, window):

@@ -6,8 +6,10 @@ from game_logic import *
 import time
 
 
+
 def game(screen):
 
+    FPS = 60
     # -- define surfaces --
     # surfaces start with non-zero size
     # they will be scaled up on a VIDEORESIZE event
@@ -81,6 +83,8 @@ def game(screen):
     clock = pygame.time.Clock()
     done = False
     showing_combinations = False
+    pygame.event.post(pygame.event.Event(pygame.VIDEORESIZE, {'size': (805, 457), 'w': 805, 'h': 457}))
+
     while not done:
 
         # //-- reset the surfaces --//
@@ -98,6 +102,7 @@ def game(screen):
 
             # //-- on screen resize --//
             if event.type == pygame.VIDEORESIZE:
+
                 screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
 
                 # how far away is the top left corner of main board from 0,0?
@@ -217,22 +222,15 @@ def game(screen):
             n = 1
 
         if showing_combinations:
+            FPS = 60
             try:
                 flash_tiles(list_of_boards_considered[n], analysis_tile_group)
-
-                # eg ai is first to move
-                if len(list_of_boards_considered) >= 100000:
-                    n += 1000
-                # eg fist response to humans move
-                if len(list_of_boards_considered) >= 40000:
-                    n += 240
-                # eg second or third
-                elif len(list_of_boards_considered) >= 1000:
-                    n += 24
-                # endgame
-                else:
+                
+                # scale speed of analysis display dependant on size of things to display
+                if len(list_of_boards_considered) // 60 == 0:
                     n += 1
-
+                else:
+                    n += len(list_of_boards_considered) // 60
                 right_title_obj.text = f"Considered: {n}"
 
             except:
@@ -242,6 +240,8 @@ def game(screen):
                 left_title_obj.text = "Human to move"
                 board[computer_move] = ai
                 board_won = game_over_check(board)
+        else:
+            FPS = 60
 
 
 if __name__ == "__main__":
