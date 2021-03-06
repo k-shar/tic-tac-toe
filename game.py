@@ -6,10 +6,8 @@ from game_logic import *
 import time
 
 
-
 def game(screen):
 
-    FPS = 60
     # -- define surfaces --
     # surfaces start with non-zero size
     # they will be scaled up on a VIDEORESIZE event
@@ -25,15 +23,15 @@ def game(screen):
     main_board = pygame.Surface((200, 200))
 
     # display whos turn and if won lost or draw
-    left_title_obj = TextSurface("Human to move", AQUA)
+    left_title_obj = TextSurface("Human to move", AQUA, 0.6)
     # display stats below analysis board
-    right_title_obj = TextSurface("", PINK)
+    right_title_obj = TextSurface("", PINK, 0.6)
 
     # buttons for the options menu
     button_group = pygame.sprite.Group()
-    reset_button = Button("Reset", (171, 0, 0))
-    player_move = Button("Human Moves", (171, 0, 0))
-    ai_move = Button("Ai Moves", (171, 0, 0))
+    reset_button = Button("Reset", (171, 0, 0), 0.6)
+    player_move = Button("Human Moves", (171, 0, 0), 0.6)
+    ai_move = Button("Ai Moves", (171, 0, 0), 0.6)
 
     button_group.add(reset_button)
     button_group.add(player_move)
@@ -65,6 +63,10 @@ def game(screen):
 
     player_to_move = True
     board_won = False
+
+    last_move_board = board.copy()
+    tile_eval_for_display = [""] * 9
+    FPS = 60
 
     def game_over_check(board):
         has_board_won = True
@@ -131,7 +133,6 @@ def game(screen):
 
             # //-- mouse press --//
             if event.type == pygame.MOUSEBUTTONUP:
-
                 # see if any buttons are clicked
                 buttons_pressed = pygame.sprite.spritecollide(options_selector_mouse_sprite, button_group, False)
                 if len(buttons_pressed) == 1:
@@ -155,16 +156,38 @@ def game(screen):
                         player_to_move = False
                         left_title_obj.text = "AI is thinking"
 
-                # if player is trying to make a move
-                if player_to_move and not board_won and not showing_combinations:
+                # if player is trying to make a move AS O (player)
+                if player_to_move and not board_won and not showing_combinations and event.button == 1:
                     tiles_collided = []
                     tiles_collided = pygame.sprite.spritecollide(main_board_mouse_sprite, tile_group, False)
 
                     if len(tiles_collided) > 0:
+                        last_move_board = board.copy()
                         board[tiles_collided[0].key] = player
                         left_title_obj.text = "AI is thinking"
                         player_to_move = False
                         board_won = game_over_check(board)
+
+                # if player is trying to make a move AS X (ai)
+                elif player_to_move and not board_won and not showing_combinations and event.button == 3:
+                    tiles_collided = []
+                    tiles_collided = pygame.sprite.spritecollide(main_board_mouse_sprite, tile_group, False)
+
+                    if len(tiles_collided) > 0:
+                        last_move_board = board.copy()
+                        board[tiles_collided[0].key] = ai
+                        left_title_obj.text = "Player to move"
+                        player_to_move = True
+                        board_won = game_over_check(board)
+
+                # if player is trying to clear a square (middle mouse)
+                elif player_to_move and not board_won and not showing_combinations and event.button == 2:
+                    tiles_collided = []
+                    tiles_collided = pygame.sprite.spritecollide(main_board_mouse_sprite, tile_group, False)
+
+                    if len(tiles_collided) > 0:
+                        last_move_board = board.copy()
+                        board[tiles_collided[0].key] = "."
 
         # print(board, main_board)
         flash_tiles(board, tile_group)
@@ -185,13 +208,67 @@ def game(screen):
         options_selector_mouse_sprite_group.update(options_offset)
         button_group.update(options_selector)
 
+        button_group.draw(options_selector)
+
+        if not player_to_move and not board_won and not showing_combinations:
+
+            number_of_boards_considered = 0
+            list_of_boards_considered = []
+
+            # find what move to play as the computer
+            computer_move, number_of_boards_considered, list_of_boards_considered, tile_eval_for_display = find_computer_move(board, ai, player, number_of_boards_considered, list_of_boards_considered)
+
+            showing_combinations = True
+            n = 1
+
+        if showing_combinations:
+            FPS = 60
+            try:
+                flash_tiles(list_of_boards_considered[n], analysis_tile_group)
+
+                # scale speed of analysis display dependant on size of things to display
+                if len(list_of_boards_considered) // 60 == 0:
+                    n += 1
+                else:
+                    n += len(list_of_boards_considered) // 60
+                right_title_obj.text = f"Considered: {n}"
+
+            except:
+                # when index out of range, all boards have been shown
+
+                showing_combinations = False
+
+                player_to_move = True
+                left_title_obj.text = "Human to move"
+                last_move_board = board.copy()
+                board[computer_move] = ai
+                board_won = game_over_check(board)
+        else:
+
+            flash_tiles(last_move_board, analysis_tile_group)
+            FPS = 60
+
+            # show the evaluation of the position
+            for i in range(9):
+                # if there is no move on this tile, show outcome of playing that move
+                if last_move_board[i] == ".":
+                    # display the computers evaluation for the position
+                    if tile_eval_for_display[i] == 0:
+                        text = "draw"
+
+                    else:
+                        text = str(tile_eval_for_display[i])
+
+                    analysis_tile_group.sprites()[i].text = text
+                    analysis_tile_group.sprites()[i].display_text()
+
         # //-- draw sprite groups --//
         tile_group.draw(main_board)
+
         analysis_tile_group.draw(analysis_board)
 
         main_board_mouse_sprite_group.draw(main_board)
         options_selector_mouse_sprite_group.draw(options_selector)
-        button_group.draw(options_selector)
 
         # //-- blit surfaces onto eachother --//
         left_side.blit(main_board, (main_board_rect))
@@ -207,41 +284,6 @@ def game(screen):
 
         pygame.display.update()
         clock.tick(FPS)
-
-        if not player_to_move and not board_won and not showing_combinations:
-
-            number_of_boards_considered = 0
-            list_of_boards_considered = []
-
-            computer_move, number_of_boards_considered, list_of_boards_considered = find_computer_move(board, ai, player, number_of_boards_considered, list_of_boards_considered)
-
-
-            # show all moves considered
-
-            showing_combinations = True
-            n = 1
-
-        if showing_combinations:
-            FPS = 60
-            try:
-                flash_tiles(list_of_boards_considered[n], analysis_tile_group)
-                
-                # scale speed of analysis display dependant on size of things to display
-                if len(list_of_boards_considered) // 60 == 0:
-                    n += 1
-                else:
-                    n += len(list_of_boards_considered) // 60
-                right_title_obj.text = f"Considered: {n}"
-
-            except:
-                showing_combinations = False
-
-                player_to_move = True
-                left_title_obj.text = "Human to move"
-                board[computer_move] = ai
-                board_won = game_over_check(board)
-        else:
-            FPS = 60
 
 
 if __name__ == "__main__":

@@ -9,10 +9,6 @@ board = [".", ".", ".",
          ".", ".", ".",
          ".", ".", "."]
 
-board = [".", ".", "O",
-         "/", "O", "/",
-         ".", "X", "/"]
-
 
 def generate_board(window, side):
     # -- generate tiles --
@@ -20,7 +16,7 @@ def generate_board(window, side):
     key = 0
     for i in range(0, 3):
         for j in range(0, 3):
-            tile_group.add(Tile([j, i], window, key, side))
+            tile_group.add(Tile([j, i], window, key, side, 0.3))
             key += 1
     return tile_group
 
@@ -105,7 +101,6 @@ def minimax(board, depth, isMax, max_id, min_id, number_of_boards_considered, li
 
                 evaluation, number_of_boards_considered, list_of_boards_considered = minimax(analysis_board, depth+1, False, max_id, min_id, number_of_boards_considered, list_of_boards_considered, alpha, beta)
 
-
                 currentMaxEval = max(evaluation, currentMaxEval)
 
                 alpha = max(alpha, evaluation)
@@ -129,9 +124,7 @@ def minimax(board, depth, isMax, max_id, min_id, number_of_boards_considered, li
 
                 evaluation, number_of_boards_considered, list_of_boards_considered = minimax(analysis_board, depth+1, True, max_id, min_id, number_of_boards_considered, list_of_boards_considered, alpha, beta)
 
-
                 currentMinEval = min(evaluation, currentMinEval)
-
 
                 beta = min(beta, evaluation)
                 if beta <= alpha:
@@ -143,6 +136,7 @@ def minimax(board, depth, isMax, max_id, min_id, number_of_boards_considered, li
 def find_computer_move(board, ai, player, number_of_boards_considered, list_of_boards_considered):
     # ai tries to minimise the evaluation
     currentEval = 9999
+    tile_eval_for_display = []
 
     # for every empty move
     for i in range(len(board)):
@@ -159,15 +153,18 @@ def find_computer_move(board, ai, player, number_of_boards_considered, list_of_b
 
             # see if its good, check how the human (maximising player) may respond
             evaluation, number_of_boards_considered, list_of_boards_considered = minimax(analysis_board, 0, True, player, ai, number_of_boards_considered, list_of_boards_considered, alpha, beta)
-   ######         print(analysis_board, evaluation)
+            tile_eval_for_display.append(evaluation)
 
             if evaluation < currentEval:
                 bestMove = i
                 currentEval = evaluation
+        else:
+            tile_eval_for_display.append("_")
 
-    return bestMove, number_of_boards_considered, list_of_boards_considered
+    return bestMove, number_of_boards_considered, list_of_boards_considered, tile_eval_for_display
 
 
 def flash_tiles(board_list, group):
+    # set the state of the board
     for i in range(len(board_list)):
         group.sprites()[i].state = board_list[i]

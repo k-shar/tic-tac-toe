@@ -16,10 +16,37 @@ class MousePointer(pygame.sprite.Sprite):
 
         self.image = pygame.Surface((5, 5))
 
+class TextSurface(pygame.sprite.Sprite):
 
-class Tile(pygame.sprite.Sprite):
-    def __init__(self, pos, window, key, side):
+    def __init__(self, text, color, scale):
         super().__init__()
+        self.image = pygame.Surface((1, 1))
+        self.image.fill(YELLOW)
+
+        self.scale = scale
+        self.color = color
+        self.font_col = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        self.text = text
+
+    def resize(self, scale, outer_surf, ratio, x, y, offset):
+        self.image, self.rect, _ = resize_surfaces(scale, self.image, outer_surf, ratio, x, y, offset)
+
+    def display_text(self):
+        # might throw error if screen is tooo small...
+        # font size is too small to render?
+        try:
+            self.font = pygame.freetype.SysFont("bell", self.image.get_height() * self.scale)
+            self.image.fill(self.color)
+            text, text_rect = self.font.render(self.text, fgcolor=(255, 255, 255))
+            self.image.blit(text, text.get_rect(center=self.image.get_rect().center))
+        except:
+            print("oh no, you squished the screen too much? :/")
+
+
+
+class Tile(TextSurface):
+    def __init__(self, pos, window, key, side, scale):
+        super().__init__("hi", (255,255,255), scale)
 
         self.pos = pos
         self.key = key
@@ -59,35 +86,9 @@ class Tile(pygame.sprite.Sprite):
     def player_click(self): self.state = "X"
 
 
-class TextSurface(pygame.sprite.Sprite):
-
-    def __init__(self, text, color):
-        super().__init__()
-        self.image = pygame.Surface((1, 1))
-        self.image.fill(YELLOW)
-
-        self.color = color
-        self.font_col = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-        self.text = text
-
-    def resize(self, scale, outer_surf, ratio, x, y, offset):
-        self.image, self.rect, _ = resize_surfaces(scale, self.image, outer_surf, ratio, x, y, offset)
-
-    def display_text(self):
-        # might throw error if screen is tooo small...
-        # font size is too small to render?
-        try:
-            self.font = pygame.freetype.SysFont("bell", self.image.get_height() * 0.6)
-            self.image.fill(self.color)
-            text, text_rect = self.font.render(self.text, fgcolor=(255, 255, 255))
-            self.image.blit(text, text.get_rect(center=self.image.get_rect().center))
-        except:
-            print("oh no, you squished the screen too much? :/")
-
-
 class Button(TextSurface):
-    def __init__(self, text, color):
-        super().__init__(text, color)
+    def __init__(self, text, color, scale):
+        super().__init__(text, color, scale)
         self.rect = self.image.get_rect()
 
     def on_click(self):
