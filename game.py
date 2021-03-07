@@ -65,7 +65,7 @@ def game(screen):
     board_won = False
 
     last_move_board = board.copy()
-    tile_eval_for_display = [""] * 9
+    tile_eval_for_display = [0] * 9
     FPS = 60
 
     def game_over_check(board):
@@ -224,6 +224,9 @@ def game(screen):
         if showing_combinations:
             FPS = 60
             try:
+                for tile in analysis_tile_group.sprites():
+                    tile.color = (random.randint(40, 50), random.randint(150, 160), random.randint(120, 130))
+
                 flash_tiles(list_of_boards_considered[n], analysis_tile_group)
 
                 # scale speed of analysis display dependant on size of things to display
@@ -255,12 +258,22 @@ def game(screen):
                     # display the computers evaluation for the position
                     if tile_eval_for_display[i] == 0:
                         text = "draw"
-
+                        analysis_tile_group.sprites()[i].color = (47,161,198)
                     else:
                         text = str(tile_eval_for_display[i])
-
+                        if int(tile_eval_for_display[i]) > 0:
+                            pass
+                            #analysis_tile_group.sprites()[i].color = (int(abs(tile_eval_for_display[i]/20) * 255), 45, 45)
+                        else:
+                            pass
+                         #   analysis_tile_group.sprites()[i].color = (49,abs(int(tile_eval_for_display[i]//20)) * 200, 87)
+                
                     analysis_tile_group.sprites()[i].text = text
                     analysis_tile_group.sprites()[i].display_text()
+
+
+
+
 
         # //-- draw sprite groups --//
         tile_group.draw(main_board)
